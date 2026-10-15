@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fcefe3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c130d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="План">
+<meta name="robots" content="noindex">
+<title>План</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#fcefe3; --card:#ffffff; --fg:#2b1d14; --muted:#8a6f5c; --line:#f2d9c4;
+  --accent:#d4570f; --accent-soft:#fde0c8; --warn:#a8323a; --warn-soft:#f9dfdd; --done:#c4ab98; --ok:#3f8a4a;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#1c130d; --card:#291b12; --fg:#f7e9dd; --muted:#b59a86; --line:#3f2b1d;
+  --accent:#ff8a3d; --accent-soft:#4a2b16; --warn:#f29a9a; --warn-soft:#3d2224; --done:#6e5646; --ok:#7fc98a; color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(48px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--display);font-weight:700;font-size:26px;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--display);font-weight:500;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.head{display:flex;flex-direction:column;gap:6px}
+.sub{color:var(--muted);margin:0}
+.progress{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:8px}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.win{background:var(--accent-soft);border-radius:12px;padding:16px;text-align:center;font-family:var(--display);font-weight:500}
+.days{display:flex;flex-direction:column;gap:10px}
+.day{background:var(--card);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:52px 1fr;gap:12px;border:1px solid var(--line)}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.day.late{border-color:var(--warn)}
+.date{display:flex;flex-direction:column;align-items:flex-start}
+.date .n{font-family:var(--display);font-weight:700;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
+.date .w{font-size:12px;color:var(--muted);text-transform:lowercase;margin-top:4px}
+.today .date .n{color:var(--accent)}
+.late .date .n{color:var(--warn)}
+.tag{display:inline-block;font-size:11px;font-weight:600;background:var(--accent);color:var(--card);border-radius:20px;padding:1px 8px;margin-top:6px}
+.late .tag{background:var(--warn)}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+li label{display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:start;cursor:pointer}
+li input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent)}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.t{min-width:0}
+.time{font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent);margin-right:6px}
+.money{display:inline-block;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;background:var(--accent-soft);border-radius:6px;padding:0 6px;margin-left:6px}
+.note{display:block;font-size:13px;color:var(--muted)}
+li.done .t{text-decoration:line-through;color:var(--done)}
+li.done .time,li.done .note{color:var(--done)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.pills{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.pill{background:var(--accent-soft);border-radius:10px;padding:8px 10px}
+.pill .time{display:block;margin:0}
+details summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"＋";color:var(--muted)}
+details[open] summary::after{content:"−"}
+details ul{margin-top:10px}
+.foot{color:var(--muted);font-size:13px;text-align:center;margin:0}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+td.chk{width:28px;padding-right:0}
+td.chk input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--accent);cursor:pointer}
+tr.got td:not(.chk){color:var(--muted)}
+table{border-collapse:collapse;width:100%;min-width:580px;font-size:14px}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.grp td{font-family:var(--display);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-top:14px;border-bottom:none}
+tfoot td{font-weight:600;border-bottom:none}
+.unpaid{display:inline-block;font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:0 6px;white-space:nowrap}
+.unk{color:var(--muted)}
+.merch{display:flex;flex-direction:column;gap:4px}
+.merch-total{display:flex;justify-content:space-between;font-weight:600;border-top:1px solid var(--line);padding-top:8px;font-variant-numeric:tabular-nums}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.grand{background:var(--accent-soft);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
+.grand .row{display:flex;justify-content:space-between;gap:12px}
+.grand .big{font-family:var(--display);font-weight:700;font-size:18px;border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer}
+.btn:focus-visible,.bigbtn:focus-visible,.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bigbtn{font:inherit;font-weight:600;font-size:15px;border:none;border-radius:22px;padding:11px 18px;background:var(--accent);color:#fff;cursor:pointer}
+.bigbtn:disabled{opacity:.5;cursor:default}
+/* Верх: вкладки и статус */
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 6px;display:flex;flex-direction:column;gap:6px}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1;font:inherit;font-weight:600;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:22px;padding:9px 12px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.sync{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);justify-content:center;min-height:16px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.sync.ok i{background:var(--ok)}
+.sync.busy i{background:var(--accent);animation:pulse 1s infinite}
+.sync.off i{background:var(--warn)}
+@keyframes pulse{50%{opacity:.3}}
+.pane{display:flex;flex-direction:column;gap:24px}
+/* Поля */
+.fields{display:grid;gap:10px}
+.fields label,.setup label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.fields input,.ta,.setup input{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+.fields input:focus,.ta:focus,.setup input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.ta{min-height:110px;resize:vertical;line-height:1.45}
+.countdown{font-family:var(--display);font-weight:700;font-size:18px;color:var(--accent)}
+.empty{border:1.5px dashed var(--line);border-radius:12px;padding:16px;color:var(--muted);font-size:14px;text-align:center}
+.stage-n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.inbox{border-color:var(--accent)}
+.inbox .ta{min-height:90px}
+/* Экран ключа */
+.setup{display:flex;flex-direction:column;gap:14px;padding-top:40px}
+.setup p{margin:0}
+.err{color:var(--warn);font-size:14px}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.progress i{transition:none}.sync.busy i{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Экран ввода ключа -->
+<section class="setup" id="setup" hidden>
+  <h1>Привет, Лина!</h1>
+  <p class="sub">Чтобы планер открыл твой закрытый сейф, вставь ключ. Это нужно один раз на каждом устройстве.</p>
+  <label>Ключ GitHub<input id="tokenIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…"></label>
+  <button class="bigbtn" id="tokenSave" type="button">Открыть планер</button>
+  <p class="err" id="tokenErr" hidden></p>
+  <p class="hint">Ключ хранится только в этом браузере. Если устройство потеряется, удали ключ на GitHub, и он перестанет работать.</p>
+</section>
+
+<p class="loading" id="loading">Открываю сейф…</p>
+
+<div id="app" hidden>
+  <div class="top">
+    <nav class="tabs" role="tablist" aria-label="Разделы">
+      <button type="button" role="tab" id="t-plan" aria-controls="tab-plan" aria-selected="true">План</button>
+      <button type="button" role="tab" id="t-dip" aria-controls="tab-dip" aria-selected="false">Диплом</button>
+    </nav>
+    <div class="sync" id="sync" role="status" aria-live="polite"><i></i><span>…</span></div>
+  </div>
+
+  <div class="pane">
+  <section class="box inbox" aria-labelledby="inboxH">
+    <h2 id="inboxH">Входящие для Claude</h2>
+    <textarea class="ta" id="inbox" data-k="inbox" placeholder="Пиши как попало: дела, мысли, покупки, что по диплому…"></textarea>
+    <p class="hint">Всё сохраняется само. Напиши Claude «разбери входящие», и заметки разлетятся по плану, а окошко очистится.</p>
+  </section>
+
+  <main class="pane" id="tab-plan" role="tabpanel" aria-labelledby="t-plan">
+    <header class="head">
+      <h1 id="h1">Мой план</h1>
+      <p class="sub" id="sub"></p>
+      <div class="progress"><i id="bar"></i></div>
+    </header>
+
+    <div class="win" id="win" hidden>Всё сделано! Кидай новые дела во «Входящие»</div>
+
+    <section class="box">
+      <h2>Без срока</h2>
+      <ul id="someday"></ul>
+    </section>
+
+    <section class="days" id="days"></section>
+
+    <section class="box">
+      <h2>Книги</h2>
+      <p class="hint">Сверху то, что нужно оплатить, потом то, где не хватает данных. Внутри группы по издательству.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th title="Получила">✓</th><th>Название</th><th>Автор</th><th>Издательство</th><th>Книга</th><th>Доставка</th></tr></thead>
+          <tbody id="bookRows"></tbody>
+          <tfoot><tr><td colspan="4">Оплачено всего</td><td class="num" id="sumBook"></td><td class="num" id="sumShip"></td></tr></tfoot>
+        </table>
+      </div>
+      <h2>Мерч</h2>
+      <div class="merch" id="merch"></div>
+      <h2>Итого оплачено</h2>
+      <div class="grand" id="grand"></div>
+    </section>
+
+    <section class="box">
+      <h2>Каждый день</h2>
+      <div class="pills" id="daily"></div>
+    </section>
+
+    <section class="box">
+      <details id="packing">
+        <summary>Сборы</summary>
+        <ul id="pack"></ul>
+      </details>
+    </section>
+
+    <div class="btns">
+      <button class="btn" id="toggleDone" type="button">Показать выполненные дни</button>
+    </div>
+    <p class="foot">Прошедшие дни с неотмеченными делами остаются в плане. Полностью выполненные дни прячутся.</p>
+  </main>
+
+  <main class="pane" id="tab-dip" role="tabpanel" aria-labelledby="t-dip" hidden>
+    <header class="head">
+      <h1>Диплом</h1>
+      <p class="sub" id="dipSub"></p>
+      <div class="progress"><i id="dipBar"></i></div>
+    </header>
+
+    <section class="box">
+      <h2>Основное</h2>
+      <div class="fields">
+        <label>Тема<input data-k="f:topic" placeholder="Впиши тему диплома"></label>
+        <label>Научный руководитель<input data-k="f:advisor" placeholder="ФИО"></label>
+        <label>Сдать текст до<input data-k="f:deadline" type="date"></label>
+        <label>Защита<input data-k="f:defense" type="date"></label>
+      </div>
+      <div class="countdown" id="countdown" hidden></div>
+    </section>
+
+    <section class="box">
+      <h2>Этапы</h2>
+      <ul id="stages"></ul>
+    </section>
+
+    <section class="box">
+      <h2>Данные и анализ</h2>
+      <div id="analysis"></div>
+    </section>
+
+    <section class="box">
+      <h2>Картинки и таблицы</h2>
+      <p class="hint">Какой рисунок или таблица в какую главу идёт, и что с ними сейчас.</p>
+      <div id="figures"></div>
+    </section>
+
+    <section class="box">
+      <h2>Заметки</h2>
+      <textarea class="ta" data-k="f:notes" placeholder="Замечания научрука, идеи, что спросить…"></textarea>
+    </section>
+  </main>
+
+  <div class="btns">
+    <button class="btn" id="forget" type="button">Выйти на этом устройстве</button>
+  </div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ===== Настройки хранилища ===== */
+const REPO="Griichka/plan-data", BRANCH="main";
+const API=`https://api.github.com/repos/${REPO}/contents/`;
+const LS={token:"pl-token",content:"pl-content",state:"pl-state",sha:"pl-sha",dirty:"pl-dirty",tab:"pl-tab"};
+const ls={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+
+let token=ls.get(LS.token,null);
+let content=ls.get(LS.content,null);
+let state=ls.get(LS.state,{});
+let stateSha=ls.get(LS.sha,null);
+let dirty=new Set(ls.get(LS.dirty,[]));
+let showDone=false, saving=false, saveTimer=null;
+
+/* ===== GitHub ===== */
+const b64enc=s=>btoa(unescape(encodeURIComponent(s)));
+const b64dec=s=>decodeURIComponent(escape(atob(s.replace(/\s/g,""))));
+class HttpErr extends Error{constructor(s){super("HTTP "+s);this.status=s}}
+async function gh(path,opt={}){
+  const r=await fetch(API+path+(opt.method?"":`?ref=${BRANCH}&t=${Date.now()}`),{
+    method:opt.method||"GET",cache:"no-store",
+    headers:{"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"},
+    body:opt.body?JSON.stringify(opt.body):undefined
+  });
+  if(!r.ok)throw new HttpErr(r.status);
+  return r.json();
+}
+async function getFile(name){
+  try{const j=await gh(name);return {data:JSON.parse(b64dec(j.content)),sha:j.sha}}
+  catch(e){if(e.status===404)return {data:null,sha:null};throw e}
+}
+
+/* ===== Статус синхронизации ===== */
+function setSync(kind,text){
+  const el=document.getElementById("sync");
+  el.className="sync "+kind; el.querySelector("span").textContent=text;
+}
+function syncedText(){const d=new Date();return "Синхронизировано в "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+
+/* ===== Загрузка с сервера ===== */
+async function pull(){
+  if(!token)return;
+  if(!navigator.onLine){setSync("off",dirty.size?"Нет сети. Изменения сохранятся, когда она появится":"Нет сети, показываю последнюю версию");return}
+  setSync("busy","Обновляю…");
+  try{
+    const [c,s]=await Promise.all([getFile("content.json"),getFile("state.json")]);
+    if(c.data){content=c.data;ls.set(LS.content,content)}
+    const remote=s.data||{};
+    dirty.forEach(k=>{remote[k]=state[k]});   // мои несохранённые правки поверх
+    state=remote; stateSha=s.sha;
+    ls.set(LS.state,state); ls.set(LS.sha,stateSha);
+    renderAll();
+    if(dirty.size)await save(); else setSync("ok",syncedText());
+    return true;
+  }catch(e){
+    if(e.status===401||e.status===403||e.status===404&&!content){return askToken(e.status===401?"Ключ не подошёл или истёк. Вставь новый.":"У ключа нет доступа к сейфу plan-data. Проверь настройки ключа.")}
+    setSync("off",dirty.size?"Нет связи с GitHub. Изменения сохранятся позже":"Нет связи с GitHub, показываю последнюю версию");
+  }
+}
+
+/* ===== Сохранение ===== */
+function change(k,v){
+  state[k]=v; dirty.add(k);
+  ls.set(LS.state,state); ls.set(LS.dirty,[...dirty]);
+  setSync("busy","Сохраняю…");
+  clearTimeout(saveTimer); saveTimer=setTimeout(save,1200);
+}
+async function save(retry=true){
+  if(saving){clearTimeout(saveTimer);saveTimer=setTimeout(save,800);return}
+  if(!dirty.size||!token)return;
+  if(!navigator.onLine){setSync("off","Нет сети. Сохраню, когда она появится");return}
+  saving=true; setSync("busy","Сохраняю…");
+  const sent=new Set(dirty);
+  const body={...state,_ts:new Date().toISOString()};
+  try{
+    const r=await gh("state.json",{method:"PUT",body:{
+      message:"Планер: отметки",branch:BRANCH,
+      content:b64enc(JSON.stringify(body,null,1)),...(stateSha?{sha:stateSha}:{})}});
+    stateSha=r.content.sha; ls.set(LS.sha,stateSha);
+    sent.forEach(k=>{if(state[k]===body[k])dirty.delete(k)});
+    ls.set(LS.dirty,[...dirty]);
+    saving=false;
+    if(dirty.size){saveTimer=setTimeout(save,500)}else setSync("ok",syncedText());
+  }catch(e){
+    saving=false;
+    if((e.status===409||e.status===422)&&retry){
+      // На другом устройстве успели сохранить: берём свежую версию и кладём свои правки сверху
+      try{const s=await getFile("state.json");const remote=s.data||{};dirty.forEach(k=>{remote[k]=state[k]});state=remote;stateSha=s.sha;ls.set(LS.state,state);ls.set(LS.sha,stateSha);renderAll();return save(false)}catch(_){}
+    }
+    if(e.status===401)return askToken("Ключ не подошёл или истёк. Вставь новый.");
+    setSync("off","Не получилось сохранить. Попробую ещё раз позже");
+  }
+}
+window.addEventListener("online",()=>{dirty.size?save():pull()});
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible")pull();
+  else if(dirty.size){clearTimeout(saveTimer);save()}
+});
+window.addEventListener("pagehide",()=>{if(dirty.size)save()});
+
+/* ===== Отрисовка ===== */
+const WD=["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+const MON=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>n.toLocaleString("ru-RU",{maximumFractionDigits:2})+" ₽";
+function todayStr(){const n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0")}
+
+function checkItem(key,inner,onToggle){
+  const el=document.createElement("li");
+  const on=!!state[key];
+  el.classList.toggle("done",on);
+  el.innerHTML=`<label><input type="checkbox" ${on?"checked":""}><span class="t">${inner}</span></label>`;
+  el.querySelector("input").addEventListener("change",e=>{
+    el.classList.toggle("done",e.target.checked); change(key,e.target.checked); onToggle&&onToggle();
+  });
+  return el;
+}
+const taskHtml=t=>`${t.time?`<span class="time">${esc(t.time)}</span>`:""}${esc(t.t)}${t.money?`<span class="money">${esc(t.money)}</span>`:""}${t.note?`<span class="note">${esc(t.note)}</span>`:""}`;
+
+function renderPlan(){
+  const days=content.days||[], someday=content.someday||[];
+  const sd=document.getElementById("someday"); sd.innerHTML="";
+  someday.forEach(t=>sd.appendChild(checkItem("c:"+t.id,taskHtml(t),refreshPlan)));
+  const de=document.getElementById("days"); de.innerHTML="";
+  days.forEach(day=>{
+    const dt=new Date(day.d+"T12:00:00");
+    const sec=document.createElement("article");
+    sec.className="day"; sec.dataset.d=day.d;
+    sec.innerHTML=`<div class="date"><span class="n">${dt.getDate()}</span><span class="w">${WD[dt.getDay()]}</span><span class="tag" hidden></span></div>`;
+    const ul=document.createElement("ul");
+    day.tasks.forEach(t=>ul.appendChild(checkItem("c:"+t.id,taskHtml(t),refreshPlan)));
+    sec.appendChild(ul); de.appendChild(sec);
+  });
+  document.getElementById("daily").innerHTML=(content.daily||[]).map(x=>`<div class="pill"><span class="time">${esc(x.time)}</span>${esc(x.t)}</div>`).join("");
+  const pk=document.getElementById("pack"); pk.innerHTML="";
+  (content.pack||[]).forEach(t=>pk.appendChild(checkItem("c:"+t.id,esc(t.t))));
+  renderBooks(); refreshPlan();
+}
+function refreshPlan(){
+  const days=content.days||[], today=todayStr();
+  let lastOpen=null;
+  document.querySelectorAll("#days .day").forEach(sec=>{
+    const day=days.find(d=>d.d===sec.dataset.d);
+    const allDone=day.tasks.every(t=>state["c:"+t.id]);
+    const isToday=day.d===today, isPast=day.d<today, late=isPast&&!allDone;
+    sec.classList.toggle("today",isToday); sec.classList.toggle("late",late);
+    const tag=sec.querySelector(".tag"); tag.hidden=!(isToday||late); tag.textContent=isToday?"сегодня":"не сделано";
+    sec.hidden=allDone&&!showDone&&!isToday;
+    if(!allDone)lastOpen=day.d;
+  });
+  const all=days.flatMap(d=>d.tasks).concat(content.someday||[]);
+  const done=all.filter(t=>state["c:"+t.id]).length, left=all.length-done;
+  document.getElementById("bar").style.width=(all.length?done/all.length*100:0)+"%";
+  document.getElementById("sub").textContent=left?`Осталось ${left} из ${all.length}.`:`Сделано всё: ${all.length} из ${all.length}.`;
+  const last=days.length?days[days.length-1].d:today;
+  const end=new Date((lastOpen||last)+"T12:00:00");
+  document.getElementById("h1").textContent=left?`План до ${end.getDate()} ${MON[end.getMonth()]}`:"План выполнен";
+  document.getElementById("win").hidden=left>0||!all.length;
+}
+
+function renderBooks(){
+  const BOOKS=content.books||[], MERCH=content.merch||[], ORDERS=content.orders||[];
+  const cell=v=>typeof v==="number"?fmt(v):v===false?'<span class="unpaid">не оплачено</span>':v==="inc"?'<span class="unk">в доставке заказа</span>':'<span class="unk">?</span>';
+  const GROUPS=["Нужно оплатить","Уточнить","Всё оплачено"];
+  const st=b=>(b.book===false||b.ship===false||b.partial)?0:(b.book==null||b.ship==null||!b.pub)?1:2;
+  const sorted=[...BOOKS].sort((a,b)=>(st(a)-st(b))||(a.pub||"я").localeCompare(b.pub||"я","ru")||a.t.localeCompare(b.t,"ru"));
+  const rows=document.getElementById("bookRows"); rows.innerHTML="";
+  let grp=null;
+  sorted.forEach(b=>{
+    const g=GROUPS[st(b)];
+    if(g!==grp){grp=g;rows.insertAdjacentHTML("beforeend",`<tr class="grp"><td colspan="6">${g}</td></tr>`)}
+    const k="got:"+b.t, on=!!state[k];
+    const tr=document.createElement("tr"); tr.classList.toggle("got",on);
+    tr.innerHTML=`<td class="chk"><input type="checkbox" ${on?"checked":""} aria-label="Получила: ${esc(b.t)}"></td><td>${esc(b.t)}</td><td>${b.au?esc(b.au):'<span class="unk">?</span>'}</td><td>${b.pub?esc(b.pub):'<span class="unk">?</span>'}</td><td class="num">${cell(b.book)}${b.bookNote?`<span class="note">${esc(b.bookNote)}</span>`:""}</td><td class="num">${cell(b.ship)}${b.shipNote?`<span class="note">${esc(b.shipNote)}</span>`:""}</td>`;
+    tr.querySelector("input").addEventListener("change",e=>{tr.classList.toggle("got",e.target.checked);change(k,e.target.checked)});
+    rows.appendChild(tr);
+  });
+  const sum=k=>BOOKS.reduce((s,b)=>s+(typeof b[k]==="number"?b[k]:0),0);
+  document.getElementById("sumBook").textContent=fmt(sum("book"));
+  document.getElementById("sumShip").textContent=fmt(sum("ship"));
+  const merchAll=MERCH.reduce((s,x)=>s+x.p,0), unpaidM=MERCH.filter(x=>x.unpaid).reduce((s,x)=>s+x.p,0), paidMerch=merchAll-unpaidM;
+  document.getElementById("grand").innerHTML=
+   `<div class="row"><span>Книги</span><span>${fmt(sum("book"))}</span></div>`+
+   `<div class="row"><span>Доставки</span><span>${fmt(sum("ship"))}</span></div>`+
+   `<div class="row"><span>Мерч</span><span>${fmt(paidMerch)}</span></div>`+
+   `<div class="row big"><span>Всего</span><span>${fmt(sum("book")+sum("ship")+paidMerch)}</span></div>`;
+  const m=document.getElementById("merch");
+  if(!MERCH.length){m.innerHTML='<p class="hint">Пока пусто.</p>';return}
+  m.innerHTML=MERCH.map(x=>`<div>${esc(x.t)}${x.from?` <span class="unk">· ${esc(x.from)}</span>`:""}${x.unpaid?` <span class="unpaid">не оплачено, ${fmt(x.p)}</span>`:""}</div>`).join("")
+   +`<div class="merch-total"><span>Всего за мерч</span><span>${fmt(merchAll)}</span></div>`
+   +(unpaidM?`<p class="hint">Из них оплачено ${fmt(paidMerch)}, ещё надо оплатить <b>${fmt(unpaidM)}</b></p>`:"")
+   +ORDERS.map(o=>`<p class="hint">${esc(o.t)}: ${fmt(o.goods)} + доставка ${fmt(o.ship)} = <b>${fmt(o.goods+o.ship)}</b></p>`).join("");
+}
+
+function plural(n,a,b,c){n=Math.abs(n)%100;const m=n%10;return n>10&&n<20?c:m===1?a:m>=2&&m<=4?b:c}
+function daysTo(s){if(!s)return null;return Math.round((new Date(s+"T00:00:00")-new Date(todayStr()+"T00:00:00"))/864e5)}
+function renderDiploma(){
+  const D=content.diploma||{}, stages=D.stages||[];
+  const ul=document.getElementById("stages"); ul.innerHTML="";
+  stages.forEach((s,i)=>ul.appendChild(checkItem("st:"+s.id,`<span class="stage-n">${i+1}.</span> ${esc(s.t)}${s.note?`<span class="note">${esc(s.note)}</span>`:""}`,refreshDiploma)));
+  const an=D.analysis||[];
+  document.getElementById("analysis").innerHTML=an.length?an.map(a=>`<p><b>${esc(a.title)}</b><span class="note">${esc(a.text)}</span></p>`).join(""):'<div class="empty">Пришли мне данные, и я разберу их: таблицы, графики, выводы для главы с результатами.</div>';
+  const fg=D.figures||[];
+  document.getElementById("figures").innerHTML=fg.length?'<ul>'+fg.map(f=>`<li>${esc(f.t)}<span class="note">${esc(f.where||"")}${f.status?" · "+esc(f.status):""}</span></li>`).join("")+'</ul>':'<div class="empty">Появится вместе с анализом данных.</div>';
+  refreshDiploma();
+}
+function refreshDiploma(){
+  const stages=(content.diploma||{}).stages||[];
+  const done=stages.filter(s=>state["st:"+s.id]).length;
+  document.getElementById("dipBar").style.width=(stages.length?done/stages.length*100:0)+"%";
+  document.getElementById("dipSub").textContent=stages.length&&done===stages.length?"Все этапы пройдены!":`Готово ${done} из ${stages.length} этапов.`;
+  const parts=[], a=daysTo(state["f:deadline"]), b=daysTo(state["f:defense"]);
+  if(a!==null)parts.push(a>=0?`до сдачи ${a} ${plural(a,"день","дня","дней")}`:"срок сдачи прошёл");
+  if(b!==null)parts.push(b>=0?`до защиты ${b} ${plural(b,"день","дня","дней")}`:"защита прошла");
+  const c=document.getElementById("countdown");
+  c.hidden=!parts.length; c.textContent=parts.join(", ").replace(/^./,x=>x.toUpperCase());
+}
+function fillFields(){
+  document.querySelectorAll("[data-k]").forEach(f=>{
+    if(document.activeElement===f)return;   // не перебивать, пока печатаешь
+    f.value=state[f.dataset.k]||"";
+  });
+}
+function renderAll(){
+  if(!content)return;
+  document.getElementById("loading").hidden=true;
+  document.getElementById("setup").hidden=true;
+  document.getElementById("app").hidden=false;
+  renderPlan(); renderDiploma(); fillFields();
+}
+
+/* ===== Поля, вкладки, кнопки ===== */
+document.querySelectorAll("[data-k]").forEach(f=>{
+  f.addEventListener("input",()=>{change(f.dataset.k,f.value);if(f.dataset.k.startsWith("f:"))refreshDiploma()});
+});
+const TABS=[["t-plan","tab-plan"],["t-dip","tab-dip"]];
+function showTab(id){
+  TABS.forEach(([b,p])=>{const on=b===id;document.getElementById(b).setAttribute("aria-selected",on);document.getElementById(p).hidden=!on});
+  ls.set(LS.tab,id);
+}
+TABS.forEach(([b])=>document.getElementById(b).addEventListener("click",()=>showTab(b)));
+showTab(ls.get(LS.tab,"t-plan"));
+document.getElementById("toggleDone").addEventListener("click",e=>{
+  showDone=!showDone; e.target.textContent=showDone?"Скрыть выполненные дни":"Показать выполненные дни"; refreshPlan();
+});
+document.getElementById("forget").addEventListener("click",()=>{
+  if(!confirm("Удалить ключ и данные с этого устройства? В сейфе на GitHub всё останется."))return;
+  Object.values(LS).forEach(ls.del); location.reload();
+});
+
+/* ===== Ключ ===== */
+function askToken(msg){
+  document.getElementById("loading").hidden=true;
+  document.getElementById("app").hidden=true;
+  document.getElementById("setup").hidden=false;
+  const er=document.getElementById("tokenErr"); er.hidden=!msg; er.textContent=msg||"";
+}
+document.getElementById("tokenSave").addEventListener("click",async()=>{
+  const v=document.getElementById("tokenIn").value.trim();
+  if(!v)return;
+  const btn=document.getElementById("tokenSave"); btn.disabled=true; btn.textContent="Проверяю…";
+  token=v;
+  try{await gh("content.json");ls.set(LS.token,token);document.getElementById("tokenIn").value="";await pull()}
+  catch(e){token=null;askToken(e.status===401?"Ключ не подошёл. Проверь, что скопировала его целиком.":e.status?"У ключа нет доступа к сейфу plan-data. Проверь, что выбрала plan-data и доступ Contents: Read and write.":"Нет связи с GitHub. Проверь интернет и попробуй ещё раз.")}
+  btn.disabled=false; btn.textContent="Открыть планер";
+});
+
+/* ===== Старт ===== */
+if(!token)askToken();
+else{ if(content)renderAll(); pull().then(ok=>{if(!ok&&!content&&token)document.getElementById("loading").textContent="Нет связи с GitHub. Попробуй позже."}) }
+setInterval(()=>{if(document.visibilityState==="visible"&&!dirty.size)pull()},5*60*1000);
+
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
